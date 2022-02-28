@@ -1,0 +1,15 @@
+plugins {
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.github.openfeign:feign-core:11.8'
+}
+
+application {
+    mainClass = 'Main'
+}
