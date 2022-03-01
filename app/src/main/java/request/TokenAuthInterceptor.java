@@ -30,18 +30,17 @@ public class TokenAuthInterceptor implements RequestInterceptor {
         long timestamp = Instant.now().getEpochSecond();
         try {
             template.header(TOKEN_HEADER, appToken);
-            template.header(SIGNATURE_HEADER, hmacSign(timestamp, template.method(), template.path(), template.body()));
+            template.header(SIGNATURE_HEADER, hmacSign(timestamp, template.method(), template.url(), template.body()));
             template.header(TIMESTAMP_HEADER, String.valueOf(timestamp));
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             e.printStackTrace();
         }
     }
 
-    private String hmacSign(long timestamp, String method, String path, byte[] body) throws NoSuchAlgorithmException, InvalidKeyException {
+    private String hmacSign(long timestamp, String method, String url, byte[] body) throws NoSuchAlgorithmException, InvalidKeyException {
         Mac hmac = Mac.getInstance("HmacSHA256");
-        SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        hmac.init(secretKey);
-        hmac.update((timestamp + method + path).getBytes(StandardCharsets.UTF_8));
+        hmac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+        hmac.update((timestamp + method + url).getBytes(StandardCharsets.UTF_8));
         byte[] result = body != null ? hmac.doFinal(body) : hmac.doFinal();
         return Hex.encodeHexString(result);
     }

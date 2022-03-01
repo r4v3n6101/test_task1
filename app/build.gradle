@@ -9,6 +9,8 @@ repositories {
 dependencies {
     implementation 'commons-codec:commons-codec:1.15'
     implementation 'io.github.openfeign:feign-core:11.8'
+    implementation 'io.github.openfeign:feign-jackson:11.8'
+    implementation 'io.github.openfeign.form:feign-form:3.8.0'
 }
 
 application {
