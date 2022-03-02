@@ -1,5 +1,5 @@
 import feign.Feign;
-import feign.Logger;
+import feign.form.FormData;
 import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
@@ -7,8 +7,7 @@ import request.TokenAuthInterceptor;
 import request.api.SumSub;
 import request.data.Applicant;
 import request.data.ApplicantStatus;
-import request.data.IdData;
-import request.data.IdMetadata;
+import request.data.DocMetadata;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,14 +25,24 @@ public class Main {
                 .encoder(new FormEncoder(new JacksonEncoder()))
                 .decoder(new JacksonDecoder())
                 .requestInterceptor(new TokenAuthInterceptor(appToken, secret))
-                .logLevel(Logger.Level.FULL)
                 .target(SumSub.class, "https://test-api.sumsub.com");
 
         Applicant applicant = api.createApplicant(defaultLevel, UUID.randomUUID().toString());
-        IdMetadata metadata = new IdMetadata(IdMetadata.DocType.PASSPORT, "RUS");
-        byte[] imageContent = Files.readAllBytes(Path.of(testImage));
-        api.addIdDoc(applicant.getId(), new IdData(metadata, imageContent));
-        ApplicantStatus status = api.getStatus(applicant.getId());
-        System.out.println(status.getReviewStatus());
+        FormData metadata = new DocMetadata(DocMetadata.DocType.PASSPORT, "RUS").toFormData();
+        FormData content = new FormData("image/jpg", "test.jpg", Files.readAllBytes(Path.of(testImage)));
+        api.addIdDoc(applicant.id, metadata, content);
+        api.pendApplicant(applicant.id);
+        ApplicantStatus status;
+        while (!(status = api.getApplicantStatus(applicant.id)).reviewStatus.equals("completed")) {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("Still not ready: status=" + status.reviewStatus);
+        }
+        applicant = api.getApplicant(applicant.id);
+        System.out.println("Name: " + applicant.info.firstName);
+        System.out.println("Last name: " + applicant.info.lastName);
     }
 }

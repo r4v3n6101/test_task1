@@ -1,17 +1,11 @@
 package request.data;
 
 public class Applicant {
-    private final String id;
+    public String id;
+    public Info info;
 
-    public Applicant(String id) {
-        this.id = id;
-    }
-
-    private Applicant() {
-        this("");
-    }
-
-    public String getId() {
-        return id;
+    public static class Info {
+        public String firstName;
+        public String lastName;
     }
 }
